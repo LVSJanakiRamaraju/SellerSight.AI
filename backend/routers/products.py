@@ -13,6 +13,7 @@ from typing import List, Optional
 from database import get_db
 from models import Product, ProductIssue
 from schemas import ProductOut, ProductDetailOut, ProductUpdate, ProductIssueOut
+from services.validation_service import ListingValidator
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -78,6 +79,8 @@ def update_product(sku_id: str, payload: ProductUpdate, db: Session = Depends(ge
         setattr(product, field, value)
 
     db.commit()
+    validator = ListingValidator()
+    validator.validate_and_persist(db, product)
     db.refresh(product)
     return product
 

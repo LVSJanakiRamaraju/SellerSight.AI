@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from database import get_db, SessionLocal
 from models import Job, Product
 from schemas import UploadResponse
+from services.validation_service import ListingValidator
 
 router = APIRouter(tags=["Upload"])
 
@@ -62,6 +63,7 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
     """
     db = SessionLocal()
     seen_skus: set[str] = set()
+    validator = ListingValidator()
 
     try:
         job = db.query(Job).filter(Job.id == job_id).first()
@@ -70,6 +72,7 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
         db.commit()
 
         processed = failed = 0
+        total_detected_issues = 0
 
         for i, row in enumerate(rows):
             try:
@@ -78,7 +81,8 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
                     sku_id = f"AUTO-{uuid.uuid4().hex[:8].upper()}"
 
                 # Duplicate SKU in same upload → flag but still process
-                if sku_id in seen_skus:
+                duplicate_sku_in_batch = sku_id in seen_skus
+                if duplicate_sku_in_batch:
                     sku_id = f"{sku_id}-DUP-{uuid.uuid4().hex[:4].upper()}"
                 seen_skus.add(sku_id)
 
@@ -107,6 +111,13 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
                 )
                 db.add(product)
                 db.commit()
+
+                issues = validator.validate_and_persist(
+                    db,
+                    product,
+                    duplicate_sku=duplicate_sku_in_batch,
+                )
+                total_detected_issues += len(issues)
                 processed += 1
 
             except Exception:
@@ -126,7 +137,7 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
         job.progress = 100
         job.completed_at = datetime.utcnow()
         job.result_summary = (
-            f'{{"processed": {processed}, "failed": {failed}, "total": {len(rows)}}}'
+            f'{{"processed": {processed}, "failed": {failed}, "total": {len(rows)}, "issues_detected": {total_detected_issues}}}'
         )
         db.commit()
 
