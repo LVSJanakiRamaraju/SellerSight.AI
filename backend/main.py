@@ -6,7 +6,7 @@ Routers are registered here as features are added (F04 onwards).
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base
-from routers import jobs, products, upload, alerts
+from routers import jobs, products, upload, alerts, competitor_prices
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
@@ -37,6 +37,7 @@ app.include_router(jobs.router)
 app.include_router(products.router)
 app.include_router(upload.router)
 app.include_router(alerts.router)
+app.include_router(competitor_prices.router)
 
 
 @app.get("/health", tags=["System"])

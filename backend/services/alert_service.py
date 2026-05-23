@@ -7,11 +7,11 @@ F08 scope: in-app alert records only (no external notifications yet).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, List
+from typing import Any, Iterable, List
 
 from sqlalchemy.orm import Session
 
-from models import Alert, CompetitorPrice, Product
+from models import Alert, CompetitorPrice, Product, ProductIssue
 from services.validation_service import ValidationRuleResult
 
 
@@ -29,13 +29,21 @@ class AlertService:
         self,
         db: Session,
         product: Product,
-        issues: Iterable[ValidationRuleResult],
+        issues: Iterable[ValidationRuleResult] | None = None,
     ) -> List[Alert]:
         """
         Replace LISTING_QUALITY and PRICE_COMPARISON alerts for one SKU.
         Returns the final persisted alert rows.
         """
-        issue_types = {i.issue_type for i in issues}
+        if issues is None:
+            persisted_issues = (
+                db.query(ProductIssue)
+                .filter(ProductIssue.sku_id == product.sku_id)
+                .all()
+            )
+            issue_types = {i.issue_type for i in persisted_issues}
+        else:
+            issue_types = {self._read_issue_type(i) for i in issues if self._read_issue_type(i)}
         drafts: List[AlertDraft] = []
 
         # Required minimum rules from assignment spec.
@@ -113,3 +121,10 @@ class AlertService:
 
         db.commit()
         return persisted
+
+    def _read_issue_type(self, issue: Any) -> str:
+        if hasattr(issue, "issue_type"):
+            return getattr(issue, "issue_type")
+        if isinstance(issue, dict):
+            return str(issue.get("issue_type", ""))
+        return ""
