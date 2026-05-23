@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from database import get_db, SessionLocal
 from models import Job, Product
 from schemas import UploadResponse
+from services.alert_service import AlertService
 from services.validation_service import ListingValidator
 
 router = APIRouter(tags=["Upload"])
@@ -64,6 +65,7 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
     db = SessionLocal()
     seen_skus: set[str] = set()
     validator = ListingValidator()
+    alert_service = AlertService()
 
     try:
         job = db.query(Job).filter(Job.id == job_id).first()
@@ -117,6 +119,7 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
                     product,
                     duplicate_sku=duplicate_sku_in_batch,
                 )
+                alert_service.sync_alerts_for_product(db, product, issues)
                 total_detected_issues += len(issues)
                 processed += 1
 

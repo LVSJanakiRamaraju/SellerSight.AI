@@ -13,6 +13,7 @@ from typing import List, Optional
 from database import get_db
 from models import Product, ProductIssue
 from schemas import ProductOut, ProductDetailOut, ProductUpdate, ProductIssueOut
+from services.alert_service import AlertService
 from services.validation_service import ListingValidator
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -80,7 +81,9 @@ def update_product(sku_id: str, payload: ProductUpdate, db: Session = Depends(ge
 
     db.commit()
     validator = ListingValidator()
-    validator.validate_and_persist(db, product)
+    issues = validator.validate_and_persist(db, product)
+    alert_service = AlertService()
+    alert_service.sync_alerts_for_product(db, product, issues)
     db.refresh(product)
     return product
 
