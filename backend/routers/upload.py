@@ -6,10 +6,12 @@ POST /upload-video         — accept a product video, create a job, mock-extrac
 """
 import csv
 import io
+import os
 import uuid
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
@@ -21,6 +23,7 @@ from schemas import UploadResponse
 from services.alert_service import AlertService
 from services.title_service import TitleEnhancer
 from services.validation_service import ListingValidator
+from services.video_extraction_service import MockVideoExtractor
 
 router = APIRouter(tags=["Upload"])
 
@@ -41,6 +44,19 @@ _VALID_COLS = {
     "price", "mrp", "description", "image_url", "product_url",
     "availability", "color", "size", "material",
 }
+
+_VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
+
+
+def _safe_filename(name: str) -> str:
+    return "".join(c for c in name if c.isalnum() or c in ("-", "_", ".")).strip(".") or "upload.mp4"
+
+
+def _uploads_dir() -> Path:
+    # backend/routers/upload.py -> backend/uploads
+    base = Path(__file__).resolve().parents[1] / "uploads"
+    base.mkdir(parents=True, exist_ok=True)
+    return base
 
 
 def _normalise_header(h: str) -> str:
@@ -160,6 +176,89 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
         db.close()
 
 
+def _process_video_job(job_id: str, saved_path: str, original_filename: str, enhance_title: bool):
+    """
+    Simulates video processing stages and creates one extracted product record.
+    """
+    db = SessionLocal()
+    validator = ListingValidator()
+    alert_service = AlertService()
+    title_enhancer = TitleEnhancer()
+    extractor = MockVideoExtractor()
+
+    try:
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if not job:
+            return
+
+        job.status = "RUNNING"
+        job.total_items = 1
+        job.progress = 5
+        db.commit()
+
+        # Stage 1: frame extraction (simulated)
+        time.sleep(0.2)
+        job.progress = 25
+        db.commit()
+
+        # Stage 2: OCR/analysis (simulated)
+        extraction = extractor.extract(original_filename)
+        time.sleep(0.2)
+        job.progress = 55
+        db.commit()
+
+        # Stage 3: create product record
+        sku_id = f"VID-{uuid.uuid4().hex[:8].upper()}"
+        product = Product(
+            sku_id=sku_id,
+            product_title=extraction.product_title,
+            brand=extraction.brand,
+            category=extraction.category,
+            price=extraction.price,
+            mrp=extraction.mrp,
+            description=extraction.description,
+            image_url=None,
+            product_url=None,
+            availability="in_stock",
+            color=extraction.color,
+            size=None,
+            material=extraction.material,
+            job_id=job_id,
+            enhance_title=enhance_title,
+        )
+        db.add(product)
+        db.commit()
+        job.progress = 75
+        db.commit()
+
+        if enhance_title:
+            title_enhancer.enhance_and_persist(db, product)
+
+        issues = validator.validate_and_persist(db, product)
+        alert_service.sync_alerts_for_product(db, product, issues)
+
+        # Stage 4: finalize
+        job.progress = 100
+        job.status = "PARTIALLY_COMPLETED" if extraction.missing_fields else "COMPLETED"
+        job.processed_items = 1
+        job.completed_at = datetime.utcnow()
+        job.result_summary = (
+            f'{{"source":"video","file":"{os.path.basename(saved_path)}","sku_id":"{sku_id}",' \
+            f'"missing_fields":{len(extraction.missing_fields)},"issues_detected":{len(issues)}}}'
+        )
+        db.commit()
+
+    except Exception as exc:
+        job = db.query(Job).filter(Job.id == job_id).first()
+        if job:
+            job.status = "FAILED"
+            job.error_message = str(exc)
+            job.completed_at = datetime.utcnow()
+            db.commit()
+    finally:
+        db.close()
+
+
 # ── Endpoint — CSV upload ─────────────────────────────────────────────────────
 
 @router.post("/upload-products-csv", response_model=UploadResponse, status_code=202)
@@ -212,5 +311,49 @@ async def upload_products_csv(
     return UploadResponse(
         job_id=job.id,
         message=f"CSV upload started. {len(normalised_rows)} rows queued for processing.",
+        status="PENDING",
+    )
+
+
+@router.post("/upload-video", response_model=UploadResponse, status_code=202)
+async def upload_video(
+    file: UploadFile = File(..., description="Short product video"),
+    enhance_title: bool = Form(False, description="Enable title enhancement"),
+    db: Session = Depends(get_db),
+):
+    """
+    Upload a product video and start background extraction job.
+    Extraction is mocked for assignment reliability and speed.
+    """
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in _VIDEO_EXTS:
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported video format. Use mp4/mov/avi/mkv/webm.",
+        )
+
+    safe_name = _safe_filename(file.filename or f"upload{ext}")
+    saved_name = f"{uuid.uuid4().hex[:12]}-{safe_name}"
+    saved_path = _uploads_dir() / saved_name
+
+    content = await file.read()
+    with open(saved_path, "wb") as f:
+        f.write(content)
+
+    job = Job(job_type="video_upload")
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    t = threading.Thread(
+        target=_process_video_job,
+        args=(job.id, str(saved_path), file.filename or saved_name, enhance_title),
+        daemon=True,
+    )
+    t.start()
+
+    return UploadResponse(
+        job_id=job.id,
+        message="Video upload accepted. Extraction job started.",
         status="PENDING",
     )
