@@ -14,6 +14,7 @@ from database import get_db
 from models import Product, ProductIssue
 from schemas import ProductOut, ProductDetailOut, ProductUpdate, ProductIssueOut
 from services.alert_service import AlertService
+from services.title_service import TitleEnhancer
 from services.validation_service import ListingValidator
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -80,6 +81,10 @@ def update_product(sku_id: str, payload: ProductUpdate, db: Session = Depends(ge
         setattr(product, field, value)
 
     db.commit()
+    if product.enhance_title:
+        enhancer = TitleEnhancer()
+        enhancer.enhance_and_persist(db, product)
+
     validator = ListingValidator()
     issues = validator.validate_and_persist(db, product)
     alert_service = AlertService()
@@ -99,3 +104,17 @@ def get_product_issues(sku_id: str, db: Session = Depends(get_db)):
         .order_by(ProductIssue.severity)
         .all()
     )
+
+
+@router.post("/{sku_id}/enhance-title", response_model=ProductOut)
+def enhance_product_title(sku_id: str, db: Session = Depends(get_db)):
+    """Generate enhanced title suggestions for one product."""
+    product = db.query(Product).filter(Product.sku_id == sku_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail=f"Product '{sku_id}' not found.")
+
+    product.enhance_title = True
+    enhancer = TitleEnhancer()
+    enhancer.enhance_and_persist(db, product)
+    db.refresh(product)
+    return product

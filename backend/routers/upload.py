@@ -19,6 +19,7 @@ from database import get_db, SessionLocal
 from models import Job, Product
 from schemas import UploadResponse
 from services.alert_service import AlertService
+from services.title_service import TitleEnhancer
 from services.validation_service import ListingValidator
 
 router = APIRouter(tags=["Upload"])
@@ -66,6 +67,7 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
     seen_skus: set[str] = set()
     validator = ListingValidator()
     alert_service = AlertService()
+    title_enhancer = TitleEnhancer()
 
     try:
         job = db.query(Job).filter(Job.id == job_id).first()
@@ -113,6 +115,9 @@ def _process_csv_job(job_id: str, rows: list[dict], enhance_title: bool):
                 )
                 db.add(product)
                 db.commit()
+
+                if enhance_title:
+                    title_enhancer.enhance_and_persist(db, product)
 
                 issues = validator.validate_and_persist(
                     db,
