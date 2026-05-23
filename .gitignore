@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# SQLite
+*.db
+*.sqlite3
+
+# Env files
+.env
+.env.local
+.env.production
+
+# Node / React
+node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.production
+*.tsbuildinfo
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Uploads (keep folder, not content)
+backend/uploads/
+!backend/uploads/.gitkeep
