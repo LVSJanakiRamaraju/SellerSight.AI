@@ -13,6 +13,25 @@ export type UploadResponse = {
   status: string;
 };
 
+export type Job = {
+  id: string;
+  job_type: string;
+  status: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "PARTIALLY_COMPLETED";
+  progress: number;
+  total_items: number;
+  processed_items: number;
+  failed_items: number;
+  started_at: string;
+  completed_at: string | null;
+  error_message: string | null;
+  result_summary: string | null;
+};
+
+export async function getJobs(): Promise<Job[]> {
+  const { data } = await api.get<Job[]>("/jobs");
+  return data;
+}
+
 export async function uploadVideo(file: File, enhanceTitle: boolean): Promise<UploadResponse> {
   const formData = new FormData();
   formData.append("file", file);
