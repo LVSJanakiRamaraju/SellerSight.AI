@@ -27,6 +27,32 @@ export type Job = {
   result_summary: string | null;
 };
 
+export type IssueBreakdownItem = {
+  issue_type: string;
+  severity: "HIGH" | "MEDIUM" | "LOW";
+  count: number;
+};
+
+export type QualitySummary = {
+  total_products: number;
+  high_issue_count: number;
+  medium_issue_count: number;
+  low_issue_count: number;
+  no_issue_count: number;
+  avg_quality_score: number;
+  missing_image_count: number;
+  invalid_price_count: number;
+  out_of_stock_count: number;
+  total_alerts: number;
+  unread_alerts: number;
+  issue_breakdown: IssueBreakdownItem[];
+};
+
+export async function getQualitySummary(): Promise<QualitySummary> {
+  const { data } = await api.get<QualitySummary>("/dashboard/quality-summary");
+  return data;
+}
+
 export async function getJobs(): Promise<Job[]> {
   const { data } = await api.get<Job[]>("/jobs");
   return data;
