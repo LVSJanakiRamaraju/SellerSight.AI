@@ -1,0 +1,13 @@
+sku_id,product_name,platform,competitor_url,competitor_price,currency,last_checked_at
+SHOE001,Nike Blue Running Shoes for Men,Amazon,https://example.com/a/shoe001,3499,INR,2026-05-22
+SHOE001,Nike Blue Running Shoes for Men,Myntra,https://example.com/m/shoe001,3799,INR,2026-05-22
+SHOE001,Nike Blue Running Shoes for Men,Ajio,https://example.com/j/shoe001,3599,INR,2026-05-22
+DRESS001,Red Dress for Women,Ajio,https://example.com/j/dress001,1599,INR,2026-05-22
+DRESS001,Red Dress for Women,Nykaa Fashion,https://example.com/n/dress001,1899,INR,2026-05-22
+WATCH001,Titan Watch,Amazon,https://example.com/a/watch001,4499,INR,2026-05-22
+WATCH001,Titan Watch,Tata Cliq,https://example.com/t/watch001,4699,INR,2026-05-22
+TSHIRT001,Levis White Casual T-Shirt,Meesho,https://example.com/me/tshirt001,899,INR,2026-05-22
+KURTI001,Blue Kurti,Amazon,https://example.com/a/kurti001,1199,INR,2026-05-22
+BAG001,Travel Bag,Myntra,https://example.com/m/bag001,999,INR,2026-05-22
+UNKNOWN001,Unknown Product,Amazon,https://example.com/a/unknown001,999,INR,2026-05-22
+SHOE002,Adidas Sports Shoes,Amazon,https://example.com/a/shoe002,invalid,INR,2026-05-22

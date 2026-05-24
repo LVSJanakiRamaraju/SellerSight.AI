@@ -1,0 +1,9 @@
+sku_id,product_title,description,brand,category,price,mrp,image_url,product_url,availability,color,size,material
+SHOE001,Nike Blue Running Shoes for Men,"Lightweight running shoes with breathable mesh upper and cushioned sole for daily training.",Nike,Running Shoes,3999,4999,https://example.com/images/shoe001.jpg,https://flipkart.example.com/shoe001,in_stock,Blue,9,Mesh
+DRESS001,Red Dress for Women,"Elegant red dress with soft lining and comfortable fit for events and daily wear.",Zara,Dresses,1799,2499,https://example.com/images/dress001.jpg,https://flipkart.example.com/dress001,in_stock,Red,M,Polyester
+BAG001,Travel Bag,"Compact travel bag with zipper compartments.",Puma,Bags,abc,1299,,https://flipkart.example.com/bag001,out_of_stock,,,
+WATCH001,Titan,"Premium dial watch with stainless steel body and durable strap.",Titan,Watches,5499,4999,bad-url,https://flipkart.example.com/watch001,in_stock,Black,,Steel
+TSHIRT001,Levis White Casual T-Shirt for Men,"Soft cotton t-shirt with breathable texture and regular fit for casual wear.",Levis,T-Shirts,999,1499,https://example.com/images/tshirt001.jpg,https://flipkart.example.com/tshirt001,in_stock,White,L,Cotton
+MISSING001,,"Generic listing with missing title and image to trigger validation rules.",,Accessories,299,399,,https://flipkart.example.com/missing001,in_stock,,,
+KURTI001,Blue Kurti,"Comfort fit kurti for daily ethnic wear with quality stitching and soft fabric.",,Kurtis,1299,1599,https://example.com/images/kurti001.jpg,https://flipkart.example.com/kurti001,in_stock,Blue,M,Rayon
+SHOE001,Nike Blue Running Shoes Duplicate SKU,"Duplicate SKU row to test duplicate handling during CSV processing.",Nike,Running Shoes,3899,4999,https://example.com/images/shoe001-alt.jpg,https://flipkart.example.com/shoe001-dup,in_stock,Blue,8,Mesh
