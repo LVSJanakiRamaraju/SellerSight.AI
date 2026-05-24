@@ -5,8 +5,9 @@ Routers are registered here as features are added (F04 onwards).
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
+from database import engine, Base, SessionLocal
 from routers import jobs, products, upload, alerts, competitor_prices, dashboard
+from services.seed_service import seed_demo_data
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
@@ -39,6 +40,16 @@ app.include_router(upload.router)
 app.include_router(alerts.router)
 app.include_router(competitor_prices.router)
 app.include_router(dashboard.router)
+
+
+@app.on_event("startup")
+def startup_seed_demo_data():
+    """Seed demo data once when DB is empty to improve reviewer experience."""
+    db = SessionLocal()
+    try:
+        seed_demo_data(db)
+    finally:
+        db.close()
 
 
 @app.get("/health", tags=["System"])
