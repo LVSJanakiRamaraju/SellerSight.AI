@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
-import { getProducts, type ProductFilters, type ProductListItem } from "@/lib/api";
+import { getProducts, getQualityReportUrl, type ProductFilters, type ProductListItem } from "@/lib/api";
 
 function qualityTone(score: number | null): string {
   if (score === null) return "bg-slate-100 text-slate-700";
@@ -52,6 +52,16 @@ export default function ProductsPage() {
       <div>
         <h2 className="text-3xl font-extrabold text-slate-900">Products</h2>
         <p className="mt-1 text-slate-600">Filter listings by severity, category, stock status, and search query.</p>
+        <div className="mt-3">
+          <a
+            href={getQualityReportUrl(filters)}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+          >
+            Download Quality Report
+          </a>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">

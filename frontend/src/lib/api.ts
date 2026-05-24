@@ -116,6 +116,18 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   return data;
 }
 
+export function getQualityReportUrl(filters: ProductFilters = {}): string {
+  const params = new URLSearchParams();
+
+  if (filters.category) params.set("category", filters.category);
+  if (filters.severity) params.set("severity", filters.severity);
+  if (filters.availability) params.set("availability", filters.availability);
+  if (filters.search) params.set("search", filters.search);
+
+  const query = params.toString();
+  return `${API_BASE_URL}/products/report/quality.csv${query ? `?${query}` : ""}`;
+}
+
 export async function getProductDetail(skuId: string): Promise<ProductDetail> {
   const { data } = await api.get<ProductDetail>(`/products/${skuId}`);
   return data;
