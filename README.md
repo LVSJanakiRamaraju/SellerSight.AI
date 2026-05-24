@@ -223,6 +223,26 @@ Recommended review sequence:
 - Frontend config: vercel.json
 - Set VITE_API_URL to your deployed backend URL
 
+### Option C: Docker Compose (Local)
+
+From repository root:
+
+```powershell
+docker compose up --build
+```
+
+Services:
+
+- Frontend: http://localhost:4173
+- Backend API: http://localhost:8000
+- API docs: http://localhost:8000/docs
+
+Stop services:
+
+```powershell
+docker compose down
+```
+
 ## 10. Deployment Links
 
 Update these after deployment:
@@ -276,7 +296,6 @@ Trade-offs:
 - Price history charts per platform
 - Exportable PDF/CSV quality reports
 - Auth and multi-tenant seller support
-- Docker Compose deployment profile
 
 ## 15. Submission Notes Template
 
