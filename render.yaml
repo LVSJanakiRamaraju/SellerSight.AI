@@ -9,8 +9,9 @@ services:
       - key: DATABASE_URL
         value: sqlite:///./sellersight.db
 
-  - type: static
+  - type: web
     name: sellersight-web
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
