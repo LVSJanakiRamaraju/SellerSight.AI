@@ -228,7 +228,7 @@ Recommended review sequence:
 Update these after deployment:
 
 - Frontend URL: https://sellersightai.vercel.app
-- Backend API URL: TODO
+- Backend API URL: https://sellersight-api.onrender.com
 - GitHub Repository: https://github.com/LVSJanakiRamaraju/SellerSight.AI
 
 ## 11. What Is Real vs Mocked
@@ -282,8 +282,8 @@ Trade-offs:
 
 Use this block for final assignment submission:
 
-- Frontend deployment link: TODO
-- Backend API link: TODO
+- Frontend deployment link: https://sellersightai.vercel.app
+- Backend API link: https://sellersight-api.onrender.com
 - GitHub repository link: https://github.com/LVSJanakiRamaraju/SellerSight.AI
 - README: this file
 - Test credentials/instructions: no auth required
