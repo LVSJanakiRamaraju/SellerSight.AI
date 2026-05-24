@@ -13,6 +13,50 @@ export type UploadResponse = {
   status: string;
 };
 
+export type ProductListItem = {
+  sku_id: string;
+  product_title: string | null;
+  brand: string | null;
+  category: string | null;
+  price: number | null;
+  mrp: number | null;
+  description: string | null;
+  image_url: string | null;
+  product_url: string | null;
+  availability: string | null;
+  color: string | null;
+  size: string | null;
+  material: string | null;
+  job_id: string | null;
+  enhance_title: boolean;
+  enhanced_title: string | null;
+  title_keywords: string | null;
+  title_attributes: string | null;
+  title_enhancement_reason: string | null;
+  quality_score: number | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductFilters = {
+  category?: string;
+  severity?: "HIGH" | "MEDIUM" | "LOW";
+  availability?: "in_stock" | "out_of_stock";
+  search?: string;
+};
+
+export async function getProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
+  const { data } = await api.get<ProductListItem[]>("/products", {
+    params: {
+      category: filters.category || undefined,
+      severity: filters.severity || undefined,
+      availability: filters.availability || undefined,
+      search: filters.search || undefined,
+    },
+  });
+  return data;
+}
+
 export type Job = {
   id: string;
   job_type: string;
