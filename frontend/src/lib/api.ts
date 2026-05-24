@@ -45,6 +45,57 @@ export type ProductFilters = {
   search?: string;
 };
 
+export type ProductIssue = {
+  id: number;
+  sku_id: string;
+  issue_type: string;
+  severity: "HIGH" | "MEDIUM" | "LOW";
+  message: string;
+  suggested_fix: string | null;
+  created_at: string;
+};
+
+export type CompetitorPrice = {
+  id: number;
+  sku_id: string;
+  product_name: string | null;
+  platform: string;
+  competitor_url: string | null;
+  competitor_price: number;
+  currency: string;
+  last_checked_at: string;
+  price_history: string | null;
+};
+
+export type ProductAlert = {
+  id: number;
+  sku_id: string | null;
+  alert_type: string;
+  severity: "HIGH" | "MEDIUM" | "LOW";
+  message: string;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type ProductDetail = ProductListItem & {
+  issues: ProductIssue[];
+  competitor_prices: CompetitorPrice[];
+  alerts: ProductAlert[];
+};
+
+export type PriceComparison = {
+  sku_id: string;
+  product_title: string | null;
+  our_price: number | null;
+  lowest_competitor_price: number | null;
+  highest_competitor_price: number | null;
+  avg_competitor_price: number | null;
+  price_gap: number | null;
+  percentage_diff: number | null;
+  recommended_action: string;
+  competitor_prices: CompetitorPrice[];
+};
+
 export async function getProducts(filters: ProductFilters = {}): Promise<ProductListItem[]> {
   const { data } = await api.get<ProductListItem[]>("/products", {
     params: {
@@ -53,6 +104,32 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
       availability: filters.availability || undefined,
       search: filters.search || undefined,
     },
+  });
+  return data;
+}
+
+export async function getProductDetail(skuId: string): Promise<ProductDetail> {
+  const { data } = await api.get<ProductDetail>(`/products/${skuId}`);
+  return data;
+}
+
+export async function getProductCompetitorComparison(skuId: string): Promise<PriceComparison> {
+  const { data } = await api.get<PriceComparison>(`/products/${skuId}/competitor-prices`);
+  return data;
+}
+
+export async function enhanceProductTitle(skuId: string): Promise<ProductListItem> {
+  const { data } = await api.post<ProductListItem>(`/products/${skuId}/enhance-title`);
+  return data;
+}
+
+export async function refreshCompetitorPrices(skuId?: string): Promise<UploadResponse> {
+  const formData = new FormData();
+  if (skuId) {
+    formData.append("sku_id", skuId);
+  }
+  const { data } = await api.post<UploadResponse>("/competitor-prices/refresh", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
   });
   return data;
 }
