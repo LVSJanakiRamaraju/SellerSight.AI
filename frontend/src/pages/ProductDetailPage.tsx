@@ -1,6 +1,16 @@
 import { useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import {
   enhanceProductTitle,
@@ -29,6 +39,38 @@ function parseJson<T>(value: string | null): T | null {
     return null;
   }
 }
+
+type PriceHistoryPoint = {
+  price: number;
+  checked_at: string;
+};
+
+function buildPriceHistoryChart(
+  rows: Array<{ platform: string; price_history: string | null }>
+): Array<Record<string, number | string | null>> {
+  const byTimestamp = new Map<string, Record<string, number | string | null>>();
+
+  rows.forEach((row) => {
+    const history = parseJson<PriceHistoryPoint[]>(row.price_history) ?? [];
+    history.forEach((point) => {
+      if (!point.checked_at || typeof point.price !== "number") return;
+
+      const existing = byTimestamp.get(point.checked_at) ?? {
+        timestamp: point.checked_at,
+        label: new Date(point.checked_at).toLocaleDateString(),
+      };
+
+      existing[row.platform] = point.price;
+      byTimestamp.set(point.checked_at, existing);
+    });
+  });
+
+  return Array.from(byTimestamp.values()).sort(
+    (left, right) => new Date(String(left.timestamp)).getTime() - new Date(String(right.timestamp)).getTime()
+  );
+}
+
+const CHART_COLORS = ["#0f766e", "#ea580c", "#2563eb", "#be123c", "#65a30d", "#7c3aed"];
 
 export default function ProductDetailPage() {
   const { skuId } = useParams();
@@ -70,6 +112,10 @@ export default function ProductDetailPage() {
   const attrMap = useMemo(
     () => parseJson<Record<string, string>>(product?.title_attributes ?? null) ?? {},
     [product]
+  );
+  const priceHistoryChartData = useMemo(
+    () => buildPriceHistoryChart(comparison?.competitor_prices ?? []),
+    [comparison]
   );
 
   if (!skuId) {
@@ -240,6 +286,40 @@ export default function ProductDetailPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                <div className="mt-6">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h4 className="text-base font-bold text-slate-900">Price History Chart</h4>
+                    <p className="text-xs text-slate-500">Trend by competitor platform</p>
+                  </div>
+
+                  {priceHistoryChartData.length === 0 ? (
+                    <p className="text-sm text-slate-500">No competitor price history available yet.</p>
+                  ) : (
+                    <div className="h-80 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={priceHistoryChartData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
+                          <XAxis dataKey="label" stroke="#64748b" tickLine={false} axisLine={false} />
+                          <YAxis stroke="#64748b" tickLine={false} axisLine={false} />
+                          <Tooltip />
+                          <Legend />
+                          {comparison.competitor_prices.map((row, index) => (
+                            <Line
+                              key={row.id}
+                              type="monotone"
+                              dataKey={row.platform}
+                              stroke={CHART_COLORS[index % CHART_COLORS.length]}
+                              strokeWidth={2}
+                              dot={{ r: 3 }}
+                              connectNulls
+                            />
+                          ))}
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  )}
                 </div>
               </>
             ) : null}
