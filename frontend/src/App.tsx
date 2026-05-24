@@ -1,15 +1,28 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+
+import AppLayout from "./components/AppLayout";
+import AlertsPage from "./pages/AlertsPage";
+import DashboardPage from "./pages/DashboardPage";
+import JobsPage from "./pages/JobsPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import ProductsPage from "./pages/ProductsPage";
+import UploadPage from "./pages/UploadPage";
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto flex min-h-screen max-w-6xl items-center justify-center px-6 py-10">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <h1 className="text-3xl font-bold text-brand-700">SellerSight.AI</h1>
-          <p className="mt-2 max-w-xl text-slate-600">
-            Frontend scaffold is ready. Next step adds full layout, routing, and dashboard pages.
-          </p>
-        </div>
-      </div>
-    </div>
+    <AppLayout>
+      <Routes>
+        <Route path="/" element={<DashboardPage />} />
+        <Route path="/upload" element={<UploadPage />} />
+        <Route path="/jobs" element={<JobsPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/products/:skuId" element={<ProductDetailPage />} />
+        <Route path="/alerts" element={<AlertsPage />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </AppLayout>
   );
 }
 
