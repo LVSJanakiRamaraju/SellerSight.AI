@@ -77,6 +77,12 @@ export type ProductAlert = {
   created_at: string;
 };
 
+export type AlertFilters = {
+  severity?: "HIGH" | "MEDIUM" | "LOW";
+  is_read?: boolean;
+  sku_id?: string;
+};
+
 export type ProductDetail = ProductListItem & {
   issues: ProductIssue[];
   competitor_prices: CompetitorPrice[];
@@ -131,6 +137,22 @@ export async function refreshCompetitorPrices(skuId?: string): Promise<UploadRes
   const { data } = await api.post<UploadResponse>("/competitor-prices/refresh", formData, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return data;
+}
+
+export async function getAlerts(filters: AlertFilters = {}): Promise<ProductAlert[]> {
+  const { data } = await api.get<ProductAlert[]>("/alerts", {
+    params: {
+      severity: filters.severity,
+      is_read: filters.is_read,
+      sku_id: filters.sku_id,
+    },
+  });
+  return data;
+}
+
+export async function markAlertsRead(ids: number[]): Promise<ProductAlert[]> {
+  const { data } = await api.post<ProductAlert[]>("/alerts/mark-read", { ids });
   return data;
 }
 
