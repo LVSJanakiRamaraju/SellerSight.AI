@@ -227,7 +227,7 @@ Recommended review sequence:
 
 Update these after deployment:
 
-- Frontend URL: TODO
+- Frontend URL: https://sellersightai.vercel.app
 - Backend API URL: TODO
 - GitHub Repository: https://github.com/LVSJanakiRamaraju/SellerSight.AI
 
